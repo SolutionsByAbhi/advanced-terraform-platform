@@ -1,0 +1,37 @@
+name:  Terraform Plan
+
+on:
+   pull_request:
+       paths:
+           -  "envs/**"
+          -  "modules/**"
+           -  "global/**"
+
+jobs:
+    plan:
+       runs-on: ubuntu-latest
+       strategy:
+           matrix:
+              env:  [dev,  staging,  prod]
+
+       steps:
+           -  uses:  actions/checkout@v4
+
+           -  uses:  hashicorp/setup-terraform@v3
+              with:
+                  terraform_version: 1.6.0
+
+           -  name: Terraform  fmt
+              run:  terraform  fmt  -check  -recursive
+
+           -  name:  Terraform init
+               working-directory: envs/${{  matrix.env  }}
+              run:  terraform  init
+
+          -  name:  Terraform  validate
+              working-directory:  envs/${{ matrix.env  }}
+              run:  terraform  validate
+
+          -  name:  Terraform  plan
+              working-directory:  envs/${{  matrix.env }}
+               run: terraform  plan  -input=false
